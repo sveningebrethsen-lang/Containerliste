@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ContainerScan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #f0a500;
+    --accent2: #e05c2a;
+    --green: #2ea043;
+    --green-light: #56d364;
+    --blue: #1f6feb;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --red: #da3633;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+  }
+
+  .logo span { color: var(--text); }
+
+  .driver-badge {
+    margin-left: auto;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .driver-badge:hover { border-color: var(--accent); }
+  .driver-dot {
+    width: 8px; height: 8px;
+    background: var(--green-light);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* MAIN */
+  main {
+    flex: 1;
+    padding: 20px 16px 100px;
+    max-width: 500px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* DRIVER SETUP */
+  #setup-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 40px;
+  }
+
+  .setup-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .setup-sub {
+    text-align: center;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  /* SCAN SECTION */
+  #scan-screen { display: none; flex-direction: column; gap: 16px; }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  /* SCAN BOX */
+  .scan-box {
+    background: var(--surface);
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 28px 20px;
+    text-align: center;
+    transition: border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scan-box.active {
+    border-color: var(--accent);
+    border-style: solid;
+  }
+
+  .scan-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .scan-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 32px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    width: 100%;
+    transition: transform 0.1s, background 0.2s;
+    margin-top: 8px;
+  }
+
+  .scan-btn:active { transform: scale(0.97); }
+  .scan-btn:hover { background: #f5b832; }
+
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-dim);
+    font-size: 12px;
+    margin: 4px 0;
+  }
+  .or-divider::before, .or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* INPUTS */
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+
+  input[type="text"], select, textarea {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 16px;
+    width: 100%;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input[type="text"]:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  input[type="text"].mono {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  select { cursor: pointer; }
+  select option { background: var(--surface2); }
+
+  textarea {
+    resize: none;
+    min-height: 80px;
+  }
+
+  /* STATUS TOGGLE */
+  .status-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .status-btn {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 12px;
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-btn .status-icon { font-size: 28px; }
+
+  .status-btn:hover { border-color: var(--text-dim); }
+
+  .status-btn.selected-havn {
+    background: rgba(31, 111, 235, 0.15);
+    border-color: var(--blue);
+    color: #79c0ff;
+  }
+
+  .status-btn.selected-levert {
+    background: rgba(46, 160, 67, 0.15);
+    border-color: var(--green);
+    color: var(--green-light);
+  }
+
+  /* SUBMIT */
+  .submit-btn {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 18px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    width: 100%;
+    transition: transform 0.1s, background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .submit-btn:active { transform: scale(0.97); }
+  .submit-btn:hover { background: #3fb950; }
+  .submit-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
+
+  /* TODAY LIST */
+  .today-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .today-count {
+    background: var(--accent);
+    color: #000;
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .log-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .log-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px;
+    animation: slideIn 0.3s ease;
+    border-left: 3px solid transparent;
+  }
+
+  .log-item.havn { border-left-color: var(--blue); }
+  .log-item.levert { border-left-color: var(--green); }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .log-container {
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .log-meta {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+
+  .log-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    height: fit-content;
+    margin-top: 2px;
+  }
+
+  .badge-havn { background: rgba(31,111,235,0.2); color: #79c0ff; }
+  .badge-levert { background: rgba(46,160,67,0.2); color: var(--green-light); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 14px;
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); }
+  .toast.error { border-color: var(--red); }
+
+  /* SCANNER MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .scanner-frame {
+    position: relative;
+    width: 280px;
+    height: 200px;
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .scanner-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    animation: scanline 2s linear infinite;
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  @keyframes scanline {
+    0% { top: 0; }
+    100% { top: 100%; }
+  }
+
+  .scanner-label {
+    color: var(--text-dim);
+    margin: 20px 0 16px;
+    font-size: 14px;
+  }
+
+  .close-scanner {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 32px;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  /* CONFIG */
+  .config-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 8px;
+  }
+
+  .config-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .webhook-input {
+    font-size: 12px !important;
+    font-family: 'Space Mono', monospace !important;
+    padding: 10px 12px !important;
+    color: var(--text-dim) !important;
+  }
+
+  .setup-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+    transition: transform 0.1s;
+  }
+
+  .setup-btn:active { transform: scale(0.97); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-dim);
+    padding: 24px;
+    font-size: 14px;
+  }
+
+  video { width: 100%; height: 100%; object-fit: cover; }
+
+  .required-star { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Container<span>Scan</span></div>
+  <div class="driver-badge" id="driverBadge" onclick="resetDriver()">
+    <div class="driver-dot"></div>
+    <span id="driverBadgeText">Sett opp</span>
+  </div>
+</header>
+
+<main>
+  <!-- SETUP SCREEN -->
+  <div id="setup-screen">
+    <div>
+      <div class="setup-title">Velkommen 👷</div>
+      <div class="setup-sub">Skriv inn ditt navn for å starte dagen</div>
+    </div>
+
+    <div class="input-group">
+      <div class="section-label">Ditt navn <span class="required-star">*</span></div>
+      <input type="text" id="driverNameInput" placeholder="f.eks. Roy, Kjell Ove, Orhan..." autocomplete="off">
+    </div>
+
+    <div class="input-group">
+      <div class="section-label">Bil / kjøretøy</div>
+      <input type="text" id="vehicleInput" placeholder="f.eks. lastebil, trailer...">
+    </div>
+
+    <div class="config-section">
+      <div class="config-title">⚙️ Google Sheets kobling</div>
+      <div class="input-group">
+        <div class="section-label">Apps Script Webhook URL</div>
+        <input type="text" class="webhook-input" id="webhookInput" placeholder="https://script.google.com/macros/s/...">
+      </div>
+    </div>
+
+    <button class="setup-btn" onclick="startSession()">START DAGEN →</button>
+
+    <div style="text-align:center; margin-top: 8px;">
+      <a href="#" onclick="showInstructions()" style="color: var(--text-dim); font-size: 13px; text-decoration: underline;">
+        Hvordan koble til Google Sheets?
+      </a>
+    </div>
+  </div>
+
+  <!-- SCAN SCREEN -->
+  <div id="scan-screen">
+
+    <!-- SCAN INPUT -->
+    <div>
+      <div class="section-label">Skann eller tast containernummer</div>
+      <div class="scan-box" id="scanBox">
+        <span class="scan-icon">📦</span>
+        <button class="scan-btn" onclick="openScanner()">📷 SKANN BARCODE</button>
+        <div class="or-divider">eller skriv manuelt</div>
+        <input type="text" class="mono" id="containerInput" placeholder="MSCU1234567" maxlength="15"
+          autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+      </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="input-group">
+      <div class="section-label">Handling <span class="required-star">*</span></div>
+      <div class="status-toggle">
+        <button class="status-btn" id="btnHavn" onclick="selectStatus('havn')">
+          <span class="status-icon">⚓</span>
+          <span>Hentet fra havn</span>
+        </button>
+        <button class="status-btn" id="btnLevert" onclick="selectStatus('levert')">
+          <span class="status-icon">✅</span>
+          <span>Levert til kunde</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- KUNDE -->
+    <div class="input-group">
+      <div class="section-label">Kunde <span class="required-star">*</span></div>
+      <input type="text" id="customerInput" placeholder="Kundenavn / firmanavn" autocomplete="off">
+    </div>
+
+    <!-- KOMMENTAR -->
+    <div class="input-group">
+      <div class="section-label">Kommentar (valgfritt)</div>
+      <textarea id="commentInput" placeholder="f.eks. krevende levering, mangler dokumenter..."></textarea>
+    </div>
+
+    <!-- SUBMIT -->
+    <button class="submit-btn" onclick="submitEntry()">
+      ➕ REGISTRER CONTAINER
+    </button>
+
+    <!-- TODAY'S LOG -->
+    <div>
+      <div class="today-header">
+        <div class="section-label" style="margin:0">Dagens registreringer</div>
+        <div class="today-count" id="todayCount">0</div>
+      </div>
+      <div class="log-list" id="logList">
+        <div class="empty-state">Ingen registreringer ennå</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- SCANNER MODAL -->
+<div class="modal-overlay" id="scannerModal">
+  <div class="scanner-frame">
+    <video id="scannerVideo" autoplay playsinline muted></video>
+    <div class="scanner-line"></div>
+  </div>
+  <div class="scanner-label">Hold containernummeret foran kameraet</div>
+  <div style="display:flex; gap:12px;">
+    <button class="close-scanner" onclick="closeScanner()">✕ Avbryt</button>
+    <button class="close-scanner" style="background:var(--accent);color:#000;border-color:var(--accent)" onclick="manualScanEntry()">Skriv manuelt</button>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let driverName = localStorage.getItem('csDriver') || '';
+let vehicle = localStorage.getItem('csVehicle') || '';
+let webhookUrl = localStorage.getItem('csWebhook') || '';
+let selectedStatus = '';
+let todayLog = JSON.parse(sessionStorage.getItem('todayLog') || '[]');
+let videoStream = null;
+
+// ===== INIT =====
+window.addEventListener('load', () => {
+  if (driverName) {
+    document.getElementById('driverBadgeText').textContent = driverName;
+    document.getElementById('webhookInput').value = webhookUrl;
+    showScanScreen();
+  } else {
+    document.getElementById('webhookInput').value = webhookUrl;
+    document.getElementById('setup-screen').style.display = 'flex';
+  }
+  renderLog();
+
+  // Auto-uppercase container input
+  document.getElementById('containerInput').addEventListener('input', function() {
+    const pos = this.selectionStart;
+    this.value = this.value.toUpperCase();
+    this.setSelectionRange(pos, pos);
+  });
+});
+
+// ===== SETUP =====
+function startSession() {
+  const name = document.getElementById('driverNameInput').value.trim();
+  const veh = document.getElementById('vehicleInput').value.trim();
+  const wh = document.getElementById('webhookInput').value.trim();
+
+  if (!name) { showToast('⚠️ Skriv inn ditt navn', 'error'); return; }
+
+  driverName = name;
+  vehicle = veh;
+  webhookUrl = wh;
+
+  localStorage.setItem('csDriver', name);
+  localStorage.setItem('csVehicle', veh);
+  localStorage.setItem('csWebhook', wh);
+
+  document.getElementById('driverBadgeText').textContent = name;
+  showScanScreen();
+}
+
+function showScanScreen() {
+  document.getElementById('setup-screen').style.display = 'none';
+  const ss = document.getElementById('scan-screen');
+  ss.style.display = 'flex';
+  ss.style.flexDirection = 'column';
+}
+
+function resetDriver() {
+  if (!confirm('Bytt sjåfør? Dagens log beholdes.')) return;
+  localStorage.removeItem('csDriver');
+  localStorage.removeItem('csVehicle');
+  driverName = '';
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('scan-screen').style.display = 'none';
+  document.getElementById('driverNameInput').value = '';
+  document.getElementById('vehicleInput').value = '';
+  document.getElementById('webhookInput').value = webhookUrl;
+}
+
+// ===== STATUS =====
+function selectStatus(status) {
+  selectedStatus = status;
+  document.getElementById('btnHavn').className = 'status-btn' + (status === 'havn' ? ' selected-havn' : '');
+  document.getElementById('btnLevert').className = 'status-btn' + (status === 'levert' ? ' selected-levert' : '');
+}
+
+// ===== SUBMIT =====
+async function submitEntry() {
+  const container = document.getElementById('containerInput').value.trim().toUpperCase();
+  const customer = document.getElementById('customerInput').value.trim();
+  const comment = document.getElementById('commentInput').value.trim();
+
+  if (!container) { showToast('⚠️ Containernummer mangler', 'error'); return; }
+  if (!selectedStatus) { showToast('⚠️ Velg handling (havn eller levert)', 'error'); return; }
+  if (!customer) { showToast('⚠️ Skriv kundenavn', 'error'); return; }
+
+  const now = new Date();
+  const entry = {
+    timestamp: now.toISOString(),
+    date: formatDate(now),
+    time: formatTime(now),
+    driver: driverName,
+    vehicle: vehicle,
+    container: container,
+    status: selectedStatus === 'havn' ? 'Hentet fra havn' : 'Levert til kunde',
+    customer: customer,
+    comment: comment
+  };
+
+  // Add to local log first
+  todayLog.unshift(entry);
+  sessionStorage.setItem('todayLog', JSON.stringify(todayLog));
+  renderLog();
+
+  // Clear form
+  document.getElementById('containerInput').value = '';
+  document.getElementById('customerInput').value = '';
+  document.getElementById('commentInput').value = '';
+  selectedStatus = '';
+  document.getElementById('btnHavn').className = 'status-btn';
+  document.getElementById('btnLevert').className = 'status-btn';
+
+  // Send to Google Sheets
+  if (webhookUrl) {
+    try {
+      showToast('📡 Sender til Google Sheets...', '');
+      await sendToSheets(entry);
+      showToast('✅ Registrert i Google Sheets!', 'success');
+    } catch(e) {
+      showToast('⚠️ Lagret lokalt – sjekk nett', 'error');
+      // Mark as pending
+      entry.pending = true;
+      sessionStorage.setItem('todayLog', JSON.stringify(todayLog));
+    }
+  } else {
+    showToast('✅ Registrert (ingen Sheets URL satt)', 'success');
+  }
+}
+
+async function sendToSheets(entry) {
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry)
+  });
+}
+
+// ===== LOG =====
+function renderLog() {
+  const list = document.getElementById('logList');
+  document.getElementById('todayCount').textContent = todayLog.length;
+
+  if (todayLog.length === 0) {
+    list.innerHTML = '<div class="empty-state">Ingen registreringer ennå i dag</div>';
+    return;
+  }
+
+  list.innerHTML = todayLog.map((e, i) => `
+    <div class="log-item ${e.status.includes('havn') ? 'havn' : 'levert'}">
+      <div>
+        <div class="log-container">${e.container}</div>
+        <div class="log-meta">${e.time} · ${e.customer}${e.comment ? ' · ' + e.comment : ''}${e.pending ? ' · ⏳ venter' : ''}</div>
+      </div>
+      <div class="log-badge ${e.status.includes('havn') ? 'badge-havn' : 'badge-levert'}">
+        ${e.status.includes('havn') ? '⚓ Havn' : '✅ Levert'}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== SCANNER =====
+function openScanner() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast('📷 Kamera ikke tilgjengelig på denne enheten', 'error');
+    return;
+  }
+
+  document.getElementById('scannerModal').classList.add('open');
+
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: 'environment', width: { ideal: 1280 } }
+  }).then(stream => {
+    videoStream = stream;
+    document.getElementById('scannerVideo').srcObject = stream;
+  }).catch(() => {
+    showToast('📷 Kan ikke åpne kamera', 'error');
+    closeScanner();
+  });
+
+  // In production: integrate with ZXing or QuaggaJS for real barcode scanning
+  // For demo: auto-close after 5s with simulated scan
+}
+
+function closeScanner() {
+  if (videoStream) {
+    videoStream.getTracks().forEach(t => t.stop());
+    videoStream = null;
+  }
+  document.getElementById('scannerModal').classList.remove('open');
+}
+
+function manualScanEntry() {
+  closeScanner();
+  document.getElementById('containerInput').focus();
+}
+
+// ===== HELPERS =====
+function formatDate(d) {
+  return d.toLocaleDateString('no-NO', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function formatTime(d) {
+  return d.toLocaleTimeString('no-NO', { hour:'2-digit', minute:'2-digit' });
+}
+
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type || '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = 'toast', 3000);
+}
+
+function showInstructions() {
+  alert(`📋 GOOGLE SHEETS OPPSETT
+
+1. Åpne Google Sheets og lag et nytt ark.
+
+2. Gå til Extensions → Apps Script
+
+3. Erstatt koden med dette:
+
+function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName("Logg") || 
+    SpreadsheetApp.getActiveSpreadsheet()
+    .insertSheet("Logg");
+  
+  var data = JSON.parse(e.postData.contents);
+  
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Dato","Tid","Sjåfør","Bil",
+      "Container","Status","Kunde","Kommentar"
+    ]);
+  }
+  
+  sheet.appendRow([
+    data.date, data.time, data.driver,
+    data.vehicle, data.container, data.status,
+    data.customer, data.comment
+  ]);
+  
+  return ContentService
+    .createTextOutput("OK")
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+4. Klikk Distribute → Deploy as Web App
+   - Execute as: Me
+   - Who has access: Anyone
+
+5. Kopier URL og lim inn i appen.`);
+}
+</script>
+</body>
+</html>
