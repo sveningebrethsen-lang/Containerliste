@@ -4,11 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0a0a">
-<title>ContainerScan — Sjåførlogg</title>
+<title>Containerliste — Sjåførlogg</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root {
     --bg: #0a0a0a;
@@ -158,14 +157,6 @@
     letter-spacing: 0.08em; color: var(--text); text-transform: uppercase;
   }
   .container-input-wrap input::placeholder { color: var(--text-faint); letter-spacing: 0.08em; }
-  .scan-btn {
-    flex-shrink: 0; width: 48px; height: 48px;
-    background: var(--accent); color: var(--bg); border: none;
-    display: grid; place-items: center; cursor: pointer;
-    transition: transform 0.1s;
-  }
-  .scan-btn:active { transform: scale(0.94); }
-  .scan-btn svg { width: 22px; height: 22px; }
   .container-format-guide {
     padding: 0 14px 12px 14px;
     font-family: var(--mono); font-size: 10px; color: var(--text-faint);
@@ -244,31 +235,6 @@
     background: transparent; border: 1px solid var(--border-strong);
     color: var(--text); width: 36px; height: 36px;
     display: grid; place-items: center; cursor: pointer;
-  }
-  #qr-reader {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    position: relative;
-  }
-  #qr-reader video { max-width: 100% !important; max-height: 100% !important; }
-  .scan-frame {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: min(80vw, 300px); height: min(80vw, 300px);
-    border: 2px solid var(--accent); pointer-events: none;
-  }
-  .scan-frame::before, .scan-frame::after,
-  .scan-frame > span:first-child, .scan-frame > span:last-child {
-    content: ""; position: absolute; width: 24px; height: 24px;
-    border: 3px solid var(--accent);
-  }
-  .scan-frame::before { top: -3px; left: -3px; border-right: none; border-bottom: none; }
-  .scan-frame::after { top: -3px; right: -3px; border-left: none; border-bottom: none; }
-  .scan-frame > span:first-child { bottom: -3px; left: -3px; border-right: none; border-top: none; }
-  .scan-frame > span:last-child { bottom: -3px; right: -3px; border-left: none; border-top: none; }
-  .scan-hint {
-    position: absolute; bottom: 30px; left: 0; right: 0;
-    text-align: center; font-family: var(--mono); font-size: 11px;
-    color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase;
   }
   .onboarding {
     position: fixed; inset: 0; background: var(--bg); z-index: 200;
@@ -374,9 +340,9 @@
 <!-- ONBOARDING -->
 <div class="onboarding" id="onboarding">
   <div class="onboarding-brand">
-    <div class="brand-mark">CS</div>
-    <div class="big">Velkommen til<br>ContainerScan</div>
-    <div class="tag">Sjåførlogg · v2.1</div>
+    <div class="brand-mark">CL</div>
+    <div class="big">Velkommen til<br>Containerliste</div>
+    <div class="tag">Sjåførlogg · v2.2</div>
   </div>
   <div class="onboarding-heading">Førstegangsoppsett</div>
   <div class="onboarding-intro">
@@ -412,10 +378,10 @@
 <header>
   <div class="hdr-row">
     <div class="brand">
-      <div class="brand-mark">CS</div>
+      <div class="brand-mark">CL</div>
       <div class="brand-text">
-        <div class="name">CONTAINERSCAN</div>
-        <div class="sub">Driver Log · v2.1</div>
+        <div class="name">CONTAINERLISTE</div>
+        <div class="sub">Driver Log · v2.2</div>
       </div>
     </div>
     <button class="driver-pill" id="driverPill" aria-label="Endre sjåfør">
@@ -443,12 +409,6 @@
     </div>
     <div class="container-input-wrap">
       <input type="text" id="containerNr" placeholder="ABCU1234567" autocomplete="off" maxlength="11">
-      <button class="scan-btn" id="scanBtn" aria-label="Skann container">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
-          <path d="M7 12h10"/>
-        </svg>
-      </button>
     </div>
     <div class="container-format-guide">
       <span>Format:</span><span class="ex">4 bokstaver + 7 tall</span>
@@ -505,18 +465,6 @@
   </button>
 </div>
 
-<!-- SCANNER -->
-<div class="modal" id="scanModal">
-  <div class="modal-header">
-    <div class="modal-title">◆ Skann Container</div>
-    <button class="modal-close" id="closeScanBtn">✕</button>
-  </div>
-  <div id="qr-reader">
-    <div class="scan-frame"><span></span><span></span></div>
-    <div class="scan-hint">Rett kameraet mot container-koden</div>
-  </div>
-</div>
-
 <!-- EDIT DRIVER -->
 <div class="modal" id="editDriverModal">
   <div class="modal-header">
@@ -562,7 +510,6 @@ const state = {
   sjafor: localStorage.getItem('cs_sjafor') || '',
   bil: localStorage.getItem('cs_bil') || '',
   seqCount: parseInt(localStorage.getItem('cs_seq_'+todayKey()) || '0'),
-  html5QrCode: null,
 };
 
 function todayKey() {
@@ -704,44 +651,6 @@ function checkReadyToSubmit() {
   const kundeOk = document.getElementById('kundeNavn').value.trim().length >= 2;
   submitBtn.disabled = !(state.containerValid && destOk && kundeOk);
 }
-
-// SCANNER
-const scanModal = document.getElementById('scanModal');
-document.getElementById('scanBtn').addEventListener('click', async () => {
-  scanModal.classList.add('open');
-  try {
-    if (!state.html5QrCode) state.html5QrCode = new Html5Qrcode("qr-reader");
-    await state.html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 260, height: 260 } },
-      (decodedText) => {
-        const match = decodedText.toUpperCase().match(/[A-Z]{4}[0-9]{7}/);
-        if (match) {
-          containerInput.value = match[0];
-          validateContainer(match[0]);
-          checkReadyToSubmit();
-          showToast('Container skannet: ' + match[0], 'success');
-          closeScanner();
-        } else {
-          containerInput.value = decodedText.toUpperCase().slice(0, 11);
-          validateContainer(containerInput.value);
-          checkReadyToSubmit();
-          closeScanner();
-        }
-      }, () => {}
-    );
-  } catch (err) {
-    showToast('Kamera utilgjengelig. Bruk manuell inntasting.', 'error');
-    scanModal.classList.remove('open');
-  }
-});
-async function closeScanner() {
-  scanModal.classList.remove('open');
-  if (state.html5QrCode && state.html5QrCode.isScanning) {
-    try { await state.html5QrCode.stop(); } catch(e) {}
-  }
-}
-document.getElementById('closeScanBtn').addEventListener('click', closeScanner);
 
 // TOAST
 function showToast(msg, type = '') {
