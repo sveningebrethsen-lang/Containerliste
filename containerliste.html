@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a0a">
+<title>Containerliste — Sjåførlogg</title>
+
+<!-- PWA manifest + app-ikoner -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Containerliste">
+<meta name="mobile-web-app-capable" content="yes">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg-elev: #141414;
+    --bg-card: #1a1a1a;
+    --border: #2a2a2a;
+    --border-strong: #3a3a3a;
+    --text: #f4f4f2;
+    --text-dim: #8a8a85;
+    --text-faint: #5a5a55;
+    --accent: #ffd400;
+    --accent-dim: #c9a800;
+    --danger: #ff4d3d;
+    --success: #3ddc84;
+    --info: #4aa3ff;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Archivo', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overscroll-behavior: none; }
+  body {
+    font-family: var(--sans); background: var(--bg); color: var(--text);
+    font-size: 16px; line-height: 1.45;
+    min-height: 100vh; min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom);
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(255, 212, 0, 0.04) 0%, transparent 40%),
+      radial-gradient(circle at 80% 100%, rgba(74, 163, 255, 0.03) 0%, transparent 40%);
+  }
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 18px 14px 18px;
+    padding-top: calc(14px + env(safe-area-inset-top));
+  }
+  .hdr-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark {
+    width: 36px; height: 36px; background: var(--accent);
+    display: grid; place-items: center; position: relative;
+    color: var(--bg); font-family: var(--mono); font-weight: 800; font-size: 18px;
+    clip-path: polygon(0 0, 100% 0, 100% 75%, 85% 100%, 0 100%);
+  }
+  .brand-text { display: flex; flex-direction: column; line-height: 1; }
+  .brand-text .name { font-weight: 900; font-size: 16px; letter-spacing: 0.02em; }
+  .brand-text .sub {
+    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.12em; margin-top: 3px;
+  }
+  .driver-pill {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    color: var(--success);
+    background: rgba(61, 220, 132, 0.08);
+    border: 1px solid rgba(61, 220, 132, 0.35);
+    padding: 7px 11px; cursor: pointer;
+    transition: background 0.15s;
+    max-width: 55%; overflow: hidden;
+  }
+  .driver-pill:active { background: rgba(61, 220, 132, 0.18); }
+  .driver-pill-inner {
+    display: flex; flex-direction: column; line-height: 1.15; min-width: 0;
+  }
+  .driver-pill-name {
+    font-weight: 700; text-transform: uppercase;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .driver-pill-bil {
+    font-size: 9px; color: var(--text-dim);
+    letter-spacing: 0.12em; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success); box-shadow: 0 0 8px var(--success);
+    animation: pulse 2s ease-in-out infinite; flex-shrink: 0;
+  }
+  .status-dot.offline { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .timestrip {
+    display: grid; grid-template-columns: 1fr 1fr auto;
+    gap: 1px; background: var(--border); border-bottom: 1px solid var(--border);
+  }
+  .timestrip > div { background: var(--bg); padding: 10px 14px; font-family: var(--mono); }
+  .timestrip .label {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em;
+    color: var(--text-faint); margin-bottom: 2px;
+  }
+  .timestrip .value { font-size: 14px; font-weight: 500; color: var(--text); }
+  .timestrip .seq .value { color: var(--accent); }
+  main { padding: 20px 18px 120px 18px; max-width: 680px; margin: 0 auto; }
+  .section-label {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.18em; color: var(--text-dim);
+    margin: 24px 0 10px 0;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::before { content: ""; width: 14px; height: 1px; background: var(--accent); }
+  .section-label:first-child { margin-top: 4px; }
+  .section-label .optional { color: var(--text-faint); margin-left: 4px; letter-spacing: 0.05em; }
+  .field {
+    background: var(--bg-card); border: 1px solid var(--border);
+    position: relative; transition: border-color 0.15s;
+  }
+  .field:focus-within { border-color: var(--accent); }
+  .field-inner { padding: 12px 14px; }
+  .field label {
+    display: block; font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    color: var(--text-dim); margin-bottom: 6px;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%; background: transparent; border: none; color: var(--text);
+    font-family: var(--sans); font-size: 17px; font-weight: 500;
+    outline: none; padding: 0;
+  }
+  .field input::placeholder, .field textarea::placeholder {
+    color: var(--text-faint); font-weight: 400;
+  }
+  .field.mono input { font-family: var(--mono); font-weight: 700; letter-spacing: 0.04em; }
+  .container-field { background: var(--bg-card); border: 1px solid var(--border); }
+  .container-field.error { border-color: var(--danger); }
+  .container-field-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px 0 14px;
+  }
+  .container-field-header label {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.15em; color: var(--text-dim);
+  }
+  .validation-badge {
+    font-family: var(--mono); font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.1em; padding: 3px 7px;
+    border: 1px solid var(--border-strong); color: var(--text-faint);
+  }
+  .validation-badge.valid { border-color: var(--success); color: var(--success); }
+  .validation-badge.invalid { border-color: var(--danger); color: var(--danger); }
+  .container-input-wrap {
+    display: flex; align-items: center;
+    padding: 8px 14px 14px 14px; gap: 10px;
+  }
+  .container-input-wrap input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-family: var(--mono); font-size: 22px; font-weight: 700;
+    letter-spacing: 0.08em; color: var(--text); text-transform: uppercase;
+  }
+  .container-input-wrap input::placeholder { color: var(--text-faint); letter-spacing: 0.08em; }
+  .container-format-guide {
+    padding: 0 14px 12px 14px;
+    font-family: var(--mono); font-size: 10px; color: var(--text-faint);
+    display: flex; gap: 6px; align-items: center;
+  }
+  .container-format-guide .ex { color: var(--accent-dim); }
+  .segmented {
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: var(--bg-card); border: 1px solid var(--border);
+  }
+  .seg-option {
+    padding: 18px 14px; text-align: center; cursor: pointer;
+    position: relative; transition: background 0.15s;
+    border-right: 1px solid var(--border);
+  }
+  .seg-option:last-child { border-right: none; }
+  .seg-option:active { background: var(--bg-elev); }
+  .seg-option .seg-icon {
+    width: 28px; height: 28px; margin: 0 auto 8px auto;
+    opacity: 0.5; transition: opacity 0.15s;
+  }
+  .seg-option .seg-title {
+    font-weight: 700; font-size: 14px; letter-spacing: 0.02em;
+    color: var(--text-dim); transition: color 0.15s;
+  }
+  .seg-option .seg-sub {
+    font-family: var(--mono); font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text-faint); margin-top: 3px;
+    transition: color 0.15s;
+  }
+  .seg-option.active { background: var(--accent); }
+  .seg-option.active .seg-icon { opacity: 1; color: var(--bg); }
+  .seg-option.active .seg-title, .seg-option.active .seg-sub { color: var(--bg); }
+  .seg-option.active::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+    background: var(--bg);
+  }
+  .field textarea { resize: none; min-height: 60px; line-height: 1.4; }
+  .submit-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 14px 18px calc(14px + env(safe-area-inset-bottom)) 18px;
+    background: linear-gradient(to top, var(--bg) 60%, transparent);
+    z-index: 5;
+  }
+  .submit-btn {
+    width: 100%; background: var(--accent); color: var(--bg); border: none;
+    padding: 18px; font-family: var(--sans); font-size: 16px;
+    font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform 0.1s, background 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { background: var(--bg-card); color: var(--text-faint); cursor: not-allowed; }
+  .submit-btn .arrow { width: 20px; height: 20px; }
+  .submit-btn.loading .arrow { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .modal {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92);
+    z-index: 100; display: none; flex-direction: column;
+  }
+  .modal.open { display: flex; }
+  .modal-header {
+    padding: 16px 18px 16px 18px;
+    padding-top: calc(16px + env(safe-area-inset-top));
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title {
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent);
+  }
+  .modal-close {
+    background: transparent; border: 1px solid var(--border-strong);
+    color: var(--text); width: 36px; height: 36px;
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .onboarding {
+    position: fixed; inset: 0; background: var(--bg); z-index: 200;
+    display: none; flex-direction: column;
+    padding: 0 24px;
+    padding-top: calc(40px + env(safe-area-inset-top));
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+  .onboarding.open { display: flex; }
+  .onboarding-brand {
+    display: flex; flex-direction: column; align-items: center;
+    margin-bottom: 32px;
+  }
+  .onboarding-brand .brand-mark {
+    width: 64px; height: 64px; font-size: 28px; margin-bottom: 16px;
+  }
+  .onboarding-brand .big {
+    font-weight: 900; font-size: 28px; letter-spacing: 0.01em;
+    text-align: center; line-height: 1.1;
+  }
+  .onboarding-brand .tag {
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--text-dim); margin-top: 10px;
+  }
+  .onboarding-heading {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--accent); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .onboarding-heading::before { content: ""; width: 14px; height: 1px; background: var(--accent); }
+  .onboarding-intro {
+    color: var(--text-dim); font-size: 14px; line-height: 1.5;
+    margin-bottom: 24px;
+  }
+  .onboarding .field { margin-bottom: 10px; }
+  .onboarding-submit { margin-top: 20px; }
+  .edit-driver-content { padding: 24px 20px; overflow-y: auto; }
+  .toast {
+    position: fixed; top: 80px; left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--bg-card); border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--accent);
+    padding: 12px 18px; font-size: 14px; font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: all 0.3s; z-index: 300;
+    max-width: calc(100vw - 40px);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { border-left-color: var(--success); }
+  .toast.error { border-left-color: var(--danger); }
+  .recent-log { margin-top: 8px; }
+  .log-entry {
+    display: grid; grid-template-columns: auto 1fr auto;
+    gap: 12px; align-items: center;
+    padding: 12px 14px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-left-width: 3px; margin-bottom: 6px;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .log-entry.havn { border-left-color: var(--info); }
+  .log-entry.kunde { border-left-color: var(--accent); }
+  .log-time { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+  .log-container {
+    font-family: var(--mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.04em; color: var(--text);
+  }
+  .log-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .log-tag {
+    font-family: var(--mono); font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 3px 7px; border: 1px solid var(--border-strong); color: var(--text-dim);
+  }
+  .log-tag.havn { color: var(--info); border-color: var(--info); }
+  .log-tag.kunde { color: var(--accent); border-color: var(--accent); }
+  .empty-state {
+    padding: 20px; text-align: center;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    border: 1px dashed var(--border-strong);
+  }
+  .help-box {
+    margin-top: 18px; padding: 12px 14px;
+    background: var(--bg-card); border-left: 3px solid var(--info);
+    font-family: var(--mono); font-size: 11px;
+    line-height: 1.55; color: var(--text-dim);
+  }
+  .help-box b {
+    color: var(--info); font-weight: 700;
+    display: block; margin-bottom: 4px; letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div class="onboarding" id="onboarding">
+  <div class="onboarding-brand">
+    <div class="brand-mark">CL</div>
+    <div class="big">Velkommen til<br>Containerliste</div>
+    <div class="tag">Sjåførlogg · v2.2</div>
+  </div>
+  <div class="onboarding-heading">Førstegangsoppsett</div>
+  <div class="onboarding-intro">
+    Registrer navn og bilnummer én gang. Disse brukes på alle loggføringer og kan endres senere ved å trykke på navnet øverst.
+  </div>
+  <div class="field mono">
+    <div class="field-inner">
+      <label>Sjåførnavn</label>
+      <input type="text" id="onb-navn" placeholder="f.eks. Roy" autocomplete="off" maxlength="40">
+    </div>
+  </div>
+  <div class="field mono">
+    <div class="field-inner">
+      <label>Bilnummer</label>
+      <input type="text" id="onb-bil" placeholder="f.eks. AB12345" autocomplete="off" maxlength="10">
+    </div>
+  </div>
+  <div class="field">
+    <div class="field-inner">
+      <label>Apps Script Webhook URL</label>
+      <input type="text" id="onb-webhook" placeholder="https://script.google.com/..." autocomplete="off">
+    </div>
+  </div>
+  <button class="submit-btn onboarding-submit" id="onb-submit" disabled>
+    <span>Kom i Gang</span>
+    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M5 12h14M12 5l7 7-7 7"/>
+    </svg>
+  </button>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr-row">
+    <div class="brand">
+      <div class="brand-mark">CL</div>
+      <div class="brand-text">
+        <div class="name">CONTAINERLISTE</div>
+        <div class="sub">Driver Log · v2.2</div>
+      </div>
+    </div>
+    <button class="driver-pill" id="driverPill" aria-label="Endre sjåfør">
+      <span class="status-dot" id="statusDot"></span>
+      <span class="driver-pill-inner">
+        <span class="driver-pill-name" id="driverPillName">—</span>
+        <span class="driver-pill-bil" id="driverPillBil">—</span>
+      </span>
+    </button>
+  </div>
+</header>
+
+<div class="timestrip">
+  <div><div class="label">Dato</div><div class="value" id="dateDisplay">—</div></div>
+  <div><div class="label">Kl.</div><div class="value" id="timeDisplay">—</div></div>
+  <div class="seq"><div class="label">Logg #</div><div class="value" id="seqDisplay">001</div></div>
+</div>
+
+<main>
+  <div class="section-label">Container</div>
+  <div class="container-field" id="containerField">
+    <div class="container-field-header">
+      <label>Container nr</label>
+      <span class="validation-badge" id="containerBadge">Venter</span>
+    </div>
+    <div class="container-input-wrap">
+      <input type="text" id="containerNr" placeholder="ABCU1234567" autocomplete="off" maxlength="11">
+    </div>
+    <div class="container-format-guide">
+      <span>Format:</span><span class="ex">4 bokstaver + 7 tall</span>
+    </div>
+  </div>
+
+  <div class="section-label">Destinasjon</div>
+  <div class="segmented" id="destSegment">
+    <div class="seg-option" data-value="havn">
+      <svg class="seg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/>
+        <circle cx="12" cy="12" r="1.5"/>
+      </svg>
+      <div class="seg-title">Til Havn</div>
+    </div>
+    <div class="seg-option" data-value="kunde">
+      <svg class="seg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 8h13l3 4v5H3zM3 17v-9"/>
+        <circle cx="7" cy="17" r="2"/><circle cx="16" cy="17" r="2"/>
+      </svg>
+      <div class="seg-title">Til Kunde</div>
+    </div>
+  </div>
+
+  <div class="section-label">Kunde</div>
+  <div class="field">
+    <div class="field-inner">
+      <label>Kunde</label>
+      <input type="text" id="kundeNavn" placeholder="" autocomplete="off" list="kundeList">
+      <datalist id="kundeList"></datalist>
+    </div>
+  </div>
+
+  <div class="section-label">Kommentar <span class="optional">valgfritt</span></div>
+  <div class="field">
+    <div class="field-inner">
+      <label>Notat fra sjåfør</label>
+      <textarea id="kommentar" placeholder="Skade, forsinkelse, eller annen info..." rows="2"></textarea>
+    </div>
+  </div>
+
+  <div class="section-label">Siste Registreringer</div>
+  <div class="recent-log" id="recentLog">
+    <div class="empty-state">Ingen loggføringer enda</div>
+  </div>
+</main>
+
+<div class="submit-bar">
+  <button class="submit-btn" id="submitBtn" disabled>
+    <span id="submitText">Send Registrering</span>
+    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M5 12h14M12 5l7 7-7 7"/>
+    </svg>
+  </button>
+</div>
+
+<!-- EDIT DRIVER -->
+<div class="modal" id="editDriverModal">
+  <div class="modal-header">
+    <div class="modal-title">◆ Endre Sjåfør / Bil</div>
+    <button class="modal-close" id="closeEditDriverBtn">✕</button>
+  </div>
+  <div class="edit-driver-content">
+    <div class="field mono" style="margin-bottom: 10px;">
+      <div class="field-inner">
+        <label>Sjåførnavn</label>
+        <input type="text" id="edit-navn" autocomplete="off" maxlength="40">
+      </div>
+    </div>
+    <div class="field mono" style="margin-bottom: 10px;">
+      <div class="field-inner">
+        <label>Bilnummer</label>
+        <input type="text" id="edit-bil" autocomplete="off" maxlength="10">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-inner">
+        <label>Webhook URL</label>
+        <input type="text" id="edit-webhook" autocomplete="off">
+      </div>
+    </div>
+    <button class="submit-btn" id="saveDriverBtn" style="margin-top: 18px;">Lagre</button>
+    <div class="help-box">
+      <b>TIPS</b>
+      Trykk på det grønne navnet øverst for å bytte sjåfør eller bil. Loggen din lagres lokalt på telefonen.
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const state = {
+  destination: null,
+  containerValid: false,
+  recent: JSON.parse(localStorage.getItem('cs_recent') || '[]'),
+  customers: JSON.parse(localStorage.getItem('cs_customers') || '["Nor Lines","Bring","PostNord","Kuehne+Nagel","DB Schenker","Risavika Havn","Greenport","Seafront"]'),
+  webhookUrl: localStorage.getItem('cs_webhook') || '',
+  sjafor: localStorage.getItem('cs_sjafor') || '',
+  bil: localStorage.getItem('cs_bil') || '',
+  seqCount: parseInt(localStorage.getItem('cs_seq_'+todayKey()) || '0'),
+};
+
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// ONBOARDING
+const onboardingEl = document.getElementById('onboarding');
+const onbNavn = document.getElementById('onb-navn');
+const onbBil = document.getElementById('onb-bil');
+const onbWebhook = document.getElementById('onb-webhook');
+const onbSubmit = document.getElementById('onb-submit');
+
+function checkOnbReady() {
+  onbSubmit.disabled = !(onbNavn.value.trim().length >= 2 && onbBil.value.trim().length >= 2);
+}
+onbNavn.addEventListener('input', checkOnbReady);
+onbBil.addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); checkOnbReady(); });
+
+onbSubmit.addEventListener('click', () => {
+  state.sjafor = onbNavn.value.trim();
+  state.bil = onbBil.value.trim().toUpperCase();
+  state.webhookUrl = onbWebhook.value.trim();
+  localStorage.setItem('cs_sjafor', state.sjafor);
+  localStorage.setItem('cs_bil', state.bil);
+  localStorage.setItem('cs_webhook', state.webhookUrl);
+  refreshDriverPill();
+  onboardingEl.classList.remove('open');
+  showToast('✓ Velkommen, ' + state.sjafor + '!', 'success');
+});
+
+if (!state.sjafor || !state.bil) {
+  onboardingEl.classList.add('open');
+} else {
+  refreshDriverPill();
+}
+
+// DRIVER PILL
+function refreshDriverPill() {
+  document.getElementById('driverPillName').textContent = state.sjafor || '—';
+  document.getElementById('driverPillBil').textContent = state.bil || '—';
+}
+
+const editDriverModal = document.getElementById('editDriverModal');
+document.getElementById('driverPill').addEventListener('click', () => {
+  document.getElementById('edit-navn').value = state.sjafor;
+  document.getElementById('edit-bil').value = state.bil;
+  document.getElementById('edit-webhook').value = state.webhookUrl;
+  editDriverModal.classList.add('open');
+});
+document.getElementById('closeEditDriverBtn').addEventListener('click', () => editDriverModal.classList.remove('open'));
+document.getElementById('saveDriverBtn').addEventListener('click', () => {
+  const navn = document.getElementById('edit-navn').value.trim();
+  const bil = document.getElementById('edit-bil').value.trim().toUpperCase();
+  const wh = document.getElementById('edit-webhook').value.trim();
+  if (navn.length < 2 || bil.length < 2) {
+    showToast('Navn og bilnummer må fylles ut', 'error');
+    return;
+  }
+  state.sjafor = navn; state.bil = bil; state.webhookUrl = wh;
+  localStorage.setItem('cs_sjafor', navn);
+  localStorage.setItem('cs_bil', bil);
+  localStorage.setItem('cs_webhook', wh);
+  refreshDriverPill();
+  editDriverModal.classList.remove('open');
+  showToast('Oppdatert', 'success');
+});
+
+// CLOCK
+let lastDayKey = todayKey();
+function updateClock() {
+  const d = new Date();
+  const dateStr = d.toLocaleDateString('no-NO', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
+  const timeStr = d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('dateDisplay').textContent = dateStr;
+  document.getElementById('timeDisplay').textContent = timeStr;
+
+  // Sjekk om dagen har rullet over mens appen er åpen
+  const currentKey = todayKey();
+  if (currentKey !== lastDayKey) {
+    lastDayKey = currentKey;
+    // Reset dagens teller og siste-liste
+    state.seqCount = parseInt(localStorage.getItem('cs_seq_'+currentKey) || '0');
+    document.getElementById('seqDisplay').textContent = String(state.seqCount + 1).padStart(3, '0');
+    renderRecent();
+  }
+}
+updateClock();
+setInterval(updateClock, 10000); // oppdateres hvert 10. sek — nok for minutt-visning
+document.getElementById('seqDisplay').textContent = String(state.seqCount + 1).padStart(3, '0');
+
+// CONTAINER VALIDATION
+const containerRegex = /^[A-Z]{4}[0-9]{7}$/;
+const containerInput = document.getElementById('containerNr');
+const containerField = document.getElementById('containerField');
+const containerBadge = document.getElementById('containerBadge');
+
+containerInput.addEventListener('input', (e) => {
+  let v = e.target.value.toUpperCase().replace(/\s/g, '');
+  e.target.value = v;
+  validateContainer(v);
+  checkReadyToSubmit();
+});
+
+function validateContainer(v) {
+  if (!v) {
+    containerBadge.textContent = 'Venter';
+    containerBadge.className = 'validation-badge';
+    containerField.classList.remove('error');
+    state.containerValid = false;
+    return;
+  }
+  if (containerRegex.test(v)) {
+    containerBadge.textContent = '✓ Gyldig';
+    containerBadge.className = 'validation-badge valid';
+    containerField.classList.remove('error');
+    state.containerValid = true;
+  } else {
+    containerBadge.textContent = 'Sjekk format';
+    containerBadge.className = 'validation-badge invalid';
+    containerField.classList.add('error');
+    state.containerValid = false;
+  }
+}
+
+// DESTINATION
+const destSeg = document.getElementById('destSegment');
+destSeg.addEventListener('click', (e) => {
+  const opt = e.target.closest('.seg-option');
+  if (!opt) return;
+  destSeg.querySelectorAll('.seg-option').forEach(o => o.classList.remove('active'));
+  opt.classList.add('active');
+  state.destination = opt.dataset.value;
+  checkReadyToSubmit();
+});
+
+// CUSTOMER DATALIST
+function refreshCustomerList() {
+  const dl = document.getElementById('kundeList');
+  dl.innerHTML = state.customers.map(c => `<option value="${c}">`).join('');
+}
+refreshCustomerList();
+document.getElementById('kundeNavn').addEventListener('input', checkReadyToSubmit);
+
+// SUBMIT READINESS
+const submitBtn = document.getElementById('submitBtn');
+function checkReadyToSubmit() {
+  const destOk = !!state.destination;
+  const kundeOk = document.getElementById('kundeNavn').value.trim().length >= 2;
+  submitBtn.disabled = !(state.containerValid && destOk && kundeOk);
+}
+
+// TOAST
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// RECENT — viser kun dagens registreringer
+function renderRecent() {
+  const el = document.getElementById('recentLog');
+  const today = todayKey();
+  const todays = state.recent.filter(r => r.dato === today);
+
+  if (todays.length === 0) {
+    el.innerHTML = '<div class="empty-state">Ingen loggføringer i dag</div>';
+    return;
+  }
+  el.innerHTML = todays.slice(0, 5).map(r => `
+    <div class="log-entry ${r.destinasjon}">
+      <div class="log-time">${r.klokkeslett}</div>
+      <div>
+        <div class="log-container">${r.container}</div>
+        <div class="log-meta">${r.sjafor || r.bilnummer || '—'} · ${r.kunde || '—'}</div>
+      </div>
+      <div class="log-tag ${r.destinasjon}">${r.destinasjon === 'kunde' ? 'Kunde' : 'Havn'}</div>
+    </div>
+  `).join('');
+}
+renderRecent();
+
+// SUBMIT
+submitBtn.addEventListener('click', async () => {
+  if (submitBtn.disabled) return;
+  const now = new Date();
+  const payload = {
+    dato: todayKey(), // lokal dato YYYY-MM-DD, ikke UTC
+    klokkeslett: now.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' }),
+    sjafor: state.sjafor,
+    bilnummer: state.bil,
+    container: containerInput.value.trim().toUpperCase(),
+    destinasjon: state.destination,
+    kunde: document.getElementById('kundeNavn').value.trim(),
+    kommentar: document.getElementById('kommentar').value.trim(),
+    timestamp: now.toISOString(),
+  };
+
+  submitBtn.classList.add('loading');
+  document.getElementById('submitText').textContent = 'Sender...';
+
+  try {
+    if (state.webhookUrl) {
+      await fetch(state.webhookUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+      });
+    } else {
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    state.recent.unshift(payload);
+    state.recent = state.recent.slice(0, 20);
+    localStorage.setItem('cs_recent', JSON.stringify(state.recent));
+
+    if (payload.kunde && !state.customers.includes(payload.kunde)) {
+      state.customers.unshift(payload.kunde);
+      state.customers = state.customers.slice(0, 30);
+      localStorage.setItem('cs_customers', JSON.stringify(state.customers));
+      refreshCustomerList();
+    }
+
+    state.seqCount++;
+    localStorage.setItem('cs_seq_'+todayKey(), state.seqCount);
+    document.getElementById('seqDisplay').textContent = String(state.seqCount + 1).padStart(3, '0');
+
+    showToast(state.webhookUrl ? '✓ Sendt til Google Sheets' : '✓ Lagret lokalt (konfigurer webhook)', 'success');
+    resetForm();
+    renderRecent();
+  } catch (err) {
+    showToast('Feil ved sending: ' + err.message, 'error');
+  } finally {
+    submitBtn.classList.remove('loading');
+    document.getElementById('submitText').textContent = 'Send Registrering';
+    checkReadyToSubmit();
+  }
+});
+
+function resetForm() {
+  containerInput.value = '';
+  document.getElementById('kommentar').value = '';
+  document.getElementById('kundeNavn').value = '';
+  destSeg.querySelectorAll('.seg-option').forEach(o => o.classList.remove('active'));
+  state.destination = null;
+  state.containerValid = false;
+  containerBadge.textContent = 'Venter';
+  containerBadge.className = 'validation-badge';
+  containerField.classList.remove('error');
+  submitBtn.disabled = true;
+  containerInput.focus();
+}
+
+const statusDot = document.getElementById('statusDot');
+window.addEventListener('online', () => statusDot.classList.remove('offline'));
+window.addEventListener('offline', () => statusDot.classList.add('offline'));
+if (!navigator.onLine) statusDot.classList.add('offline');
+</script>
+</body>
+</html>
