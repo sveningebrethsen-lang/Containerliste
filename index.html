@@ -763,7 +763,7 @@ function renderRecent() {
       <div class="log-time">${r.klokkeslett}</div>
       <div>
         <div class="log-container">${r.container}</div>
-        <div class="log-meta">${r.bil} · ${r.kunde || '—'}</div>
+        <div class="log-meta">${r.sjafor || r.bilnummer || '—'} · ${r.kunde || '—'}</div>
       </div>
       <div class="log-tag ${r.destinasjon}">${r.destinasjon === 'kunde' ? 'Kunde' : 'Havn'}</div>
     </div>
