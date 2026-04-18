@@ -1,540 +1,211 @@
-html_code = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>ContainerScan</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<title>ContainerScan v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --surface2: #21262d;
-    --border: #30363d;
-    --accent: #f0a500;
-    --green: #2ea043;
-    --green-light: #56d364;
-    --blue: #1f6feb;
-    --text: #e6edf3;
-    --text-dim: #8b949e;
-    --red: #da3633;
+    --bg: #0d1117; --surface: #161b22; --surface2: #21262d; --border: #30363d;
+    --accent: #f0a500; --green: #2ea043; --blue: #1f6feb; --text: #e6edf3; --text-dim: #8b949e;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Barlow', sans-serif;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-  }
-
-  /* HEADER */
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .logo {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 800;
-    font-size: 20px;
-    letter-spacing: 0.5px;
-    color: var(--accent);
-  }
+  body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100dvh; display: flex; flex-direction: column; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; color: var(--accent); }
   .logo span { color: var(--text); }
+  main { flex: 1; padding: 12px; max-width: 450px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .section-label { font-family: 'Space Mono', monospace; font-size: 10px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
+  .input-group { display: flex; flex-direction: column; }
+  input[type="text"], textarea { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: var(--text); font-size: 16px; width: 100%; }
+  input.mono { font-family: 'Space Mono', monospace; font-size: 20px; text-transform: uppercase; text-align: center; letter-spacing: 2px; }
+  
+  /* Type og Status Velgere */
+  .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+  .tgl-btn { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; padding: 10px; color: var(--text-dim); cursor: pointer; font-weight: 600; text-align: center; }
+  .tgl-btn.active-import { border-color: var(--accent); color: var(--accent); background: rgba(240,165,0,0.1); }
+  .tgl-btn.active-eksport { border-color: #a371f7; color: #a371f7; background: rgba(163,113,247,0.1); }
+  .tgl-btn.active-havn { border-color: var(--blue); color: #79c0ff; background: rgba(31,111,235,0.1); }
+  .tgl-btn.active-kunde { border-color: var(--green); color: #56d364; background: rgba(46,160,67,0.1); }
 
-  .driver-badge {
-    margin-left: auto;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 13px;
-    color: var(--text-dim);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  /* MAIN */
-  main {
-    flex: 1;
-    padding: 16px;
-    max-width: 450px;
-    margin: 0 auto;
-    width: 100%;
-  }
-
-  /* DRIVER SETUP */
-  #setup-screen {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding-top: 20px;
-  }
-
-  .setup-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 28px;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 4px;
-  }
-  .setup-sub {
-    text-align: center;
-    color: var(--text-dim);
-    margin-bottom: 12px;
-    font-size: 14px;
-  }
-
-  /* SCAN SCREEN */
-  #scan-screen { display: none; flex-direction: column; gap: 12px; }
-
-  .section-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 4px;
-  }
-
-  /* INPUTS */
-  .input-group { display: flex; flex-direction: column; gap: 4px; }
-
-  input[type="text"], textarea {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    color: var(--text);
-    font-family: 'Barlow', sans-serif;
-    font-size: 16px;
-    width: 100%;
-    transition: border-color 0.2s;
-  }
-
-  input[type="text"]:focus, textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  input[type="text"].mono {
-    font-family: 'Space Mono', monospace;
-    font-size: 18px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-align: center;
-  }
-
-  textarea {
-    resize: none;
-    min-height: 50px;
-  }
-
-  /* STATUS TOGGLE */
-  .status-toggle {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .status-btn {
-    background: var(--surface);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 8px;
-    color: var(--text-dim);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .status-btn .status-icon { font-size: 24px; }
-  .status-btn.selected-havn {
-    background: rgba(31, 111, 235, 0.15);
-    border-color: var(--blue);
-    color: #79c0ff;
-  }
-  .status-btn.selected-levert {
-    background: rgba(46, 160, 67, 0.15);
-    border-color: var(--green);
-    color: var(--green-light);
-  }
-
-  /* CHECKBOX */
-  .checkbox-group {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-top: 4px;
-  }
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 500;
-    cursor: pointer;
-    color: var(--text);
-  }
-  .checkbox-label input {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--accent);
-  }
-
-  /* BUTTONS */
-  .submit-btn, .setup-btn {
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 16px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 4px;
-  }
-  .submit-btn { background: var(--green); }
-  .setup-btn { background: var(--accent); color: #000; }
-  .submit-btn:active, .setup-btn:active { transform: scale(0.98); }
-
-  /* COUNTER */
-  .counter-box {
-    margin-top: 12px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-    text-align: center;
-  }
-  .counter-number {
-    font-family: 'Space Mono', monospace;
-    font-size: 36px;
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
-    margin-top: 4px;
-  }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 20px;
-    font-size: 14px;
-    z-index: 999;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    white-space: nowrap;
-  }
+  .checkbox-group { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 10px; }
+  .submit-btn { background: var(--green); color: white; border: none; border-radius: 10px; padding: 14px; font-weight: 800; font-size: 18px; cursor: pointer; margin-top: 5px; }
+  .counter-box { text-align: center; padding: 10px; border-top: 1px solid var(--border); margin-top: 5px; }
+  .counter-number { font-family: 'Space Mono', monospace; font-size: 32px; color: var(--accent); }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface2); border: 1px solid var(--border); padding: 12px 20px; border-radius: 10px; transition: 0.3s; z-index: 1000; }
   .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.success { border-color: var(--green); }
-  .toast.error { border-color: var(--red); }
-
-  .required-star { color: var(--accent); }
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">Container<span>Scan</span></div>
-  <div class="driver-badge" onclick="resetDriver()">
-    👤 <span id="driverBadgeText">Sett opp</span>
-  </div>
+  <div id="driverName" style="font-size: 12px; color: var(--text-dim);"></div>
 </header>
 
-<main>
-  <div id="setup-screen">
-    <div>
-      <div class="setup-title">Velkommen 👷</div>
-      <div class="setup-sub">Skriv inn ditt navn for å starte dagen</div>
-    </div>
-
-    <div class="input-group">
-      <div class="section-label">Ditt navn <span class="required-star">*</span></div>
-      <input type="text" id="driverNameInput" placeholder="f.eks. Roy, Kjell Ove..." autocomplete="off">
-    </div>
-
-    <div class="input-group">
-      <div class="section-label">Bil / kjøretøy</div>
-      <input type="text" id="vehicleInput" placeholder="f.eks. lastebil, trailer...">
-    </div>
-
-    <div class="input-group">
-      <div class="section-label">Google Sheets Webhook URL</div>
-      <input type="text" id="webhookInput" style="font-family:monospace; font-size:12px;" placeholder="https://script.google.com/macros/s/...">
-    </div>
-
-    <button class="setup-btn" onclick="startSession()">START DAGEN →</button>
+<main id="app-content">
+  <div id="setup-view" style="display:none; flex-direction:column; gap:15px;">
+    <h2 style="text-align:center">Oppsett</h2>
+    <input type="text" id="nameInp" placeholder="Ditt navn">
+    <input type="text" id="whInp" placeholder="Webhook URL">
+    <button class="submit-btn" onclick="saveSetup()">Lagre og Start</button>
   </div>
 
-  <div id="scan-screen">
-
+  <div id="main-view" style="display:none; flex-direction:column; gap:10px;">
     <div class="input-group">
-      <div class="section-label">Containernummer <span class="required-star">*</span></div>
-      <input type="text" class="mono" id="containerInput" placeholder="MSCU1234567" maxlength="11"
-        autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+      <div class="section-label">Containernummer (4 bokst + 7 tall)</div>
+      <input type="text" class="mono" id="contInp" maxlength="11" placeholder="ABCD1234567">
     </div>
 
     <div class="input-group">
-      <div class="section-label">Fra/til <span class="required-star">*</span></div>
-      <div class="status-toggle">
-        <button class="status-btn" id="btnHavn" onclick="selectStatus('havn')">
-          <span class="status-icon">⚓</span>
-          <span>Fra/til Havn</span>
-        </button>
-        <button class="status-btn" id="btnLevert" onclick="selectStatus('levert')">
-          <span class="status-icon">✅</span>
-          <span>Fra/til mottaker</span>
-        </button>
+      <div class="section-label">Type</div>
+      <div class="toggle-group">
+        <button class="tgl-btn" id="btnImport" onclick="setType('Import')">IMPORT</button>
+        <button class="tgl-btn" id="btnEksport" onclick="setType('Eksport')">EKSPORT</button>
       </div>
     </div>
 
     <div class="input-group">
-      <div class="section-label">Kunde <span class="required-star">*</span></div>
-      <input type="text" id="customerInput" placeholder="Kundenavn / firmanavn" autocomplete="off">
+      <div class="section-label">Fra/til</div>
+      <div class="toggle-group">
+        <button class="tgl-btn" id="btnHavn" onclick="setStatus('Havn')">⚓ Havn</button>
+        <button class="tgl-btn" id="btnKunde" onclick="setStatus('Kunde')">🏠 Mottaker</button>
+      </div>
     </div>
 
     <div class="input-group">
-      <div class="section-label">Kommentar (valgfritt)</div>
-      <textarea id="commentInput" placeholder="f.eks. krevende levering..."></textarea>
+      <div class="section-label">Kunde</div>
+      <input type="text" id="custInp" placeholder="Firmanavn">
     </div>
 
     <div class="checkbox-group">
-      <label class="checkbox-label">
-        <input type="checkbox" id="rundturCheck">
-        Rundtur (registrerer t/r samtidig)
-      </label>
+      <input type="checkbox" id="roundInp" style="width:20px; height:20px;">
+      <label for="roundInp">Rundtur (Auto-opprett retur)</label>
     </div>
 
-    <button class="submit-btn" onclick="submitEntry()">
-      ➕ REGISTRER
-    </button>
+    <button class="submit-btn" onclick="handleRegister()">➕ REGISTRER</button>
 
     <div class="counter-box">
-      <div class="section-label" style="margin:0">Registrert i dag</div>
-      <div class="counter-number" id="todayCount">0</div>
+      <div class="section-label">Antall i dag</div>
+      <div class="counter-number" id="dayCount">0</div>
     </div>
-
   </div>
 </main>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== STATE =====
-let driverName = localStorage.getItem('csDriver') || '';
-let vehicle = localStorage.getItem('csVehicle') || '';
-let webhookUrl = localStorage.getItem('csWebhook') || '';
-let selectedStatus = '';
+let type = '';
+let status = '';
+let driver = localStorage.getItem('cs_name') || '';
+let webhook = localStorage.getItem('cs_wh') || '';
 
-// ===== INIT =====
-window.addEventListener('load', () => {
-  if (driverName) {
-    document.getElementById('driverBadgeText').textContent = driverName;
-    document.getElementById('webhookInput').value = webhookUrl;
-    showScanScreen();
-  } else {
-    document.getElementById('webhookInput').value = webhookUrl;
-    document.getElementById('setup-screen').style.display = 'flex';
+window.onload = () => {
+  if(!driver) { document.getElementById('setup-view').style.display='flex'; }
+  else { 
+    document.getElementById('main-view').style.display='flex';
+    document.getElementById('driverName').innerText = driver;
+    updateCounter();
   }
+  checkNewDay();
+};
+
+function saveSetup() {
+  const n = document.getElementById('nameInp').value;
+  const w = document.getElementById('whInp').value;
+  if(!n || !w) return alert("Fyll ut begge");
+  localStorage.setItem('cs_name', n);
+  localStorage.setItem('cs_wh', w);
+  location.reload();
+}
+
+function setType(val) {
+  type = val;
+  document.getElementById('btnImport').className = 'tgl-btn' + (val==='Import'?' active-import':'');
+  document.getElementById('btnEksport').className = 'tgl-btn' + (val==='Eksport'?' active-eksport':'');
+}
+
+function setStatus(val) {
+  status = val;
+  document.getElementById('btnHavn').className = 'tgl-btn' + (val==='Havn'?' active-havn':'');
+  document.getElementById('btnKunde').className = 'tgl-btn' + (val==='Kunde'?' active-kunde':'');
+}
+
+// LOGIKK FOR FRA/TIL TEKST
+function getDirection(t, s) {
+  if (t === 'Import') {
+    return s === 'Havn' ? 'Havn -> Kunde' : 'Kunde -> Havn';
+  } else { // Eksport
+    return s === 'Havn' ? 'Havn -> Kunde' : 'Kunde -> Havn';
+  }
+}
+
+// Samme logikk for rundtur (motsatt vei)
+function getOppositeDirection(t, s) {
+  const normal = getDirection(t, s);
+  return normal === 'Havn -> Kunde' ? 'Kunde -> Havn' : 'Havn -> Kunde';
+}
+
+async function handleRegister() {
+  const cont = document.getElementById('contInp').value.toUpperCase().replace(/\s/g,'');
+  const cust = document.getElementById('custInp').value;
+  const isRound = document.getElementById('roundInp').checked;
+  const regex = /^[A-Z]{4}\d{7}$/;
+
+  if(!regex.test(cont)) return showToast("❌ Ugyldig container (4 bokst + 7 tall)", "red");
+  if(!type || !status || !cust) return showToast("⚠️ Mangler valg", "");
+
+  const direction = getDirection(type, status);
+  const data1 = { date: new Date().toLocaleDateString('no-NO'), driver, cont, type, status: direction, cust };
   
-  checkDailyReset();
+  showToast("⌛ Registrerer...", "");
+  await send(data1);
+  let count = 1;
 
-  // Auto-uppercase container input
-  document.getElementById('containerInput').addEventListener('input', function() {
-    const pos = this.selectionStart;
-    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Fjerner alt som ikke er A-Z eller tall
-    this.setSelectionRange(pos, pos);
-  });
-});
+  if(isRound) {
+    const data2 = { ...data1, status: getOppositeDirection(type, status), comment: "Rundtur retur" };
+    await send(data2);
+    count = 2;
+  }
 
-// ===== DAILY COUNTER =====
-function checkDailyReset() {
-  const nå = new Date();
-  const dagensDato = nå.toLocaleDateString('no-NO');
-  const lagretDato = localStorage.getItem('csDato');
+  addCounter(count);
+  showToast("✅ Lagret i rad 4+", "green");
   
-  if (lagretDato !== dagensDato) {
-    localStorage.setItem('csDato', dagensDato);
-    localStorage.setItem('csTeller', '0');
-  }
-  oppdaterTellerVisning();
+  // Reset
+  document.getElementById('contInp').value = '';
+  document.getElementById('roundInp').checked = false;
 }
 
-function økTeller(antall = 1) {
-  let teller = parseInt(localStorage.getItem('csTeller') || '0');
-  teller += antall;
-  localStorage.setItem('csTeller', teller.toString());
-  oppdaterTellerVisning();
+async function send(obj) {
+  if(!webhook) return;
+  await fetch(webhook, { method: 'POST', mode: 'no-cors', body: JSON.stringify(obj) });
 }
 
-function oppdaterTellerVisning() {
-  const teller = localStorage.getItem('csTeller') || '0';
-  document.getElementById('todayCount').textContent = teller;
+function addCounter(n) {
+  let c = parseInt(localStorage.getItem('cs_count') || '0');
+  localStorage.setItem('cs_count', c + n);
+  updateCounter();
 }
 
-// ===== SETUP =====
-function startSession() {
-  const name = document.getElementById('driverNameInput').value.trim();
-  const veh = document.getElementById('vehicleInput').value.trim();
-  const wh = document.getElementById('webhookInput').value.trim();
-
-  if (!name) { showToast('⚠️ Skriv inn ditt navn', 'error'); return; }
-
-  driverName = name;
-  vehicle = veh;
-  webhookUrl = wh;
-
-  localStorage.setItem('csDriver', name);
-  localStorage.setItem('csVehicle', veh);
-  localStorage.setItem('csWebhook', wh);
-
-  document.getElementById('driverBadgeText').textContent = name;
-  showScanScreen();
+function updateCounter() {
+  document.getElementById('dayCount').innerText = localStorage.getItem('cs_count') || '0';
 }
 
-function showScanScreen() {
-  document.getElementById('setup-screen').style.display = 'none';
-  const ss = document.getElementById('scan-screen');
-  ss.style.display = 'flex';
-}
-
-function resetDriver() {
-  if (!confirm('Vil du bytte sjåfør?')) return;
-  localStorage.removeItem('csDriver');
-  localStorage.removeItem('csVehicle');
-  driverName = '';
-  document.getElementById('setup-screen').style.display = 'flex';
-  document.getElementById('scan-screen').style.display = 'none';
-  document.getElementById('driverNameInput').value = '';
-  document.getElementById('vehicleInput').value = '';
-  document.getElementById('webhookInput').value = webhookUrl;
-}
-
-// ===== STATUS =====
-function selectStatus(status) {
-  selectedStatus = status;
-  document.getElementById('btnHavn').className = 'status-btn' + (status === 'havn' ? ' selected-havn' : '');
-  document.getElementById('btnLevert').className = 'status-btn' + (status === 'levert' ? ' selected-levert' : '');
-}
-
-// ===== SUBMIT =====
-async function submitEntry() {
-  const container = document.getElementById('containerInput').value.trim();
-  const customer = document.getElementById('customerInput').value.trim();
-  const comment = document.getElementById('commentInput').value.trim();
-  const erRundtur = document.getElementById('rundturCheck').checked;
-
-  // Format validering (4 bokstaver, 7 tall)
-  const containerRegex = /^[A-Z]{4}\d{7}$/;
-
-  if (!container) { showToast('⚠️ Containernummer mangler', 'error'); return; }
-  if (!containerRegex.test(container)) { showToast('⚠️ Ugyldig format! Må være 4 bokstaver og 7 tall.', 'error'); return; }
-  if (!selectedStatus) { showToast('⚠️ Velg "Fra/til"', 'error'); return; }
-  if (!customer) { showToast('⚠️ Skriv kundenavn', 'error'); return; }
-
-  const hovedStatus = selectedStatus === 'havn' ? 'Fra/til Havn' : 'Fra/til mottaker';
-  const motsattStatus = selectedStatus === 'havn' ? 'Fra/til mottaker' : 'Fra/til Havn';
-
-  const entry1 = byggObjekt(container, hovedStatus, customer, comment);
-  let registreringer = [entry1];
-
-  if (erRundtur) {
-    const entry2 = byggObjekt(container, motsattStatus, customer, comment + ' (Rundtur retur)');
-    registreringer.push(entry2);
-  }
-
-  // Tøm skjema umiddelbart for brukeropplevelse
-  document.getElementById('containerInput').value = '';
-  document.getElementById('customerInput').value = '';
-  document.getElementById('commentInput').value = '';
-  document.getElementById('rundturCheck').checked = false;
-  selectedStatus = '';
-  document.getElementById('btnHavn').className = 'status-btn';
-  document.getElementById('btnLevert').className = 'status-btn';
-
-  if (webhookUrl) {
-    try {
-      showToast('📡 Sender data...', '');
-      // Sender en og en for å ikke skape krøll for det enkle Google scriptet
-      for (let reg of registreringer) {
-        await sendToSheets(reg);
-      }
-      showToast('✅ Registrert!', 'success');
-      økTeller(registreringer.length);
-    } catch(e) {
-      showToast('⚠️ Feil ved sending', 'error');
-    }
-  } else {
-    showToast('✅ Registrert lokalt (ingen Webhook URL)', 'success');
-    økTeller(registreringer.length);
+function checkNewDay() {
+  const d = new Date().toLocaleDateString();
+  if(localStorage.getItem('cs_date') !== d) {
+    localStorage.setItem('cs_date', d);
+    localStorage.setItem('cs_count', '0');
+    updateCounter();
   }
 }
 
-function byggObjekt(container, status, customer, comment) {
-  const now = new Date();
-  return {
-    timestamp: now.toISOString(),
-    date: now.toLocaleDateString('no-NO', { day:'2-digit', month:'2-digit', year:'numeric' }),
-    time: now.toLocaleTimeString('no-NO', { hour:'2-digit', minute:'2-digit' }),
-    driver: driverName,
-    vehicle: vehicle,
-    container: container,
-    status: status,
-    customer: customer,
-    comment: comment
-  };
-}
-
-async function sendToSheets(entry) {
-  await fetch(webhookUrl, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(entry)
-  });
-}
-
-// ===== HELPERS =====
-let toastTimer;
-function showToast(msg, type) {
+function showToast(m, c) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + (type || '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.className = 'toast', 3000);
+  t.innerText = m; t.style.color = c; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 </script>
 </body>
-</html>"""
-
-with open("ContainerScan-v2.html", "w", encoding="utf-8") as f:
-    f.write(html_code)
+</html>
