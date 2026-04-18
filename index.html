@@ -3,37 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ContainerScan v3</title>
+<title>ContainerScan v5</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0d1117; --surface: #161b22; --surface2: #21262d; --border: #30363d;
-    --accent: #f0a500; --green: #2ea043; --blue: #1f6feb; --text: #e6edf3; --text-dim: #8b949e;
+    --accent: #f0a500; --green: #2ea043; --green-light: #56d364; --blue: #1f6feb; --text: #e6edf3; --text-dim: #8b949e;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100dvh; display: flex; flex-direction: column; }
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+  
+  header { 
+    background: var(--surface); 
+    border-bottom: 1px solid var(--border); 
+    padding: 10px 16px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+  }
   .logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; color: var(--accent); }
   .logo span { color: var(--text); }
+  
+  .driver-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .driver-dot {
+    width: 8px; height: 8px;
+    background: var(--green-light);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--green-light);
+  }
+
   main { flex: 1; padding: 12px; max-width: 450px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 10px; }
   .section-label { font-family: 'Space Mono', monospace; font-size: 10px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
-  .input-group { display: flex; flex-direction: column; }
-  input[type="text"], textarea { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: var(--text); font-size: 16px; width: 100%; }
-  input.mono { font-family: 'Space Mono', monospace; font-size: 20px; text-transform: uppercase; text-align: center; letter-spacing: 2px; }
   
-  /* Type og Status Velgere */
-  .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
-  .tgl-btn { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; padding: 10px; color: var(--text-dim); cursor: pointer; font-weight: 600; text-align: center; }
+  input[type="text"], textarea { 
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; 
+    padding: 12px; color: var(--text); font-size: 16px; width: 100%; 
+  }
+  input.mono { font-family: 'Space Mono', monospace; font-size: 20px; text-transform: uppercase; text-align: center; letter-spacing: 2px; }
+  textarea { resize: none; min-height: 60px; font-family: 'Barlow', sans-serif; }
+  
+  .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tgl-btn { 
+    background: var(--surface); border: 2px solid var(--border); border-radius: 8px; 
+    padding: 12px; color: var(--text-dim); cursor: pointer; font-weight: 600; text-align: center; transition: 0.2s;
+  }
+  /* Aktive stiler */
   .tgl-btn.active-import { border-color: var(--accent); color: var(--accent); background: rgba(240,165,0,0.1); }
   .tgl-btn.active-eksport { border-color: #a371f7; color: #a371f7; background: rgba(163,113,247,0.1); }
   .tgl-btn.active-havn { border-color: var(--blue); color: #79c0ff; background: rgba(31,111,235,0.1); }
   .tgl-btn.active-kunde { border-color: var(--green); color: #56d364; background: rgba(46,160,67,0.1); }
 
-  .checkbox-group { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 10px; }
-  .submit-btn { background: var(--green); color: white; border: none; border-radius: 10px; padding: 14px; font-weight: 800; font-size: 18px; cursor: pointer; margin-top: 5px; }
-  .counter-box { text-align: center; padding: 10px; border-top: 1px solid var(--border); margin-top: 5px; }
+  .checkbox-group { 
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; 
+    padding: 12px; display: flex; align-items: center; gap: 10px; 
+  }
+  .submit-btn { 
+    background: var(--green); color: white; border: none; border-radius: 10px; 
+    padding: 16px; font-weight: 800; font-size: 18px; cursor: pointer; margin-top: 5px;
+  }
+  .counter-box { text-align: center; padding: 10px; border-top: 1px solid var(--border); margin-top: 10px; }
   .counter-number { font-family: 'Space Mono', monospace; font-size: 32px; color: var(--accent); }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface2); border: 1px solid var(--border); padding: 12px 20px; border-radius: 10px; transition: 0.3s; z-index: 1000; }
+  
+  .toast { 
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); 
+    background: var(--surface2); border: 1px solid var(--border); padding: 12px 20px; 
+    border-radius: 10px; transition: 0.3s; z-index: 1000; 
+  }
   .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
 </head>
@@ -41,20 +85,23 @@
 
 <header>
   <div class="logo">Container<span>Scan</span></div>
-  <div id="driverName" style="font-size: 12px; color: var(--text-dim);"></div>
+  <div class="driver-badge" id="badgeContainer" style="display:none;">
+    <div class="driver-dot"></div>
+    <span id="driverDisplay"></span>
+  </div>
 </header>
 
-<main id="app-content">
+<main>
   <div id="setup-view" style="display:none; flex-direction:column; gap:15px;">
-    <h2 style="text-align:center">Oppsett</h2>
+    <h2 style="text-align:center">Velkommen 👷</h2>
     <input type="text" id="nameInp" placeholder="Ditt navn">
     <input type="text" id="whInp" placeholder="Webhook URL">
-    <button class="submit-btn" onclick="saveSetup()">Lagre og Start</button>
+    <button class="submit-btn" onclick="saveSetup()">START DAGEN →</button>
   </div>
 
-  <div id="main-view" style="display:none; flex-direction:column; gap:10px;">
+  <div id="main-view" style="display:none; flex-direction:column; gap:12px;">
     <div class="input-group">
-      <div class="section-label">Containernummer (4 bokst + 7 tall)</div>
+      <div class="section-label">Containernummer</div>
       <input type="text" class="mono" id="contInp" maxlength="11" placeholder="ABCD1234567">
     </div>
 
@@ -79,15 +126,20 @@
       <input type="text" id="custInp" placeholder="Firmanavn">
     </div>
 
+    <div class="input-group">
+      <div class="section-label">Kommentar</div>
+      <textarea id="commInp" placeholder="Valgfri kommentar..."></textarea>
+    </div>
+
     <div class="checkbox-group">
       <input type="checkbox" id="roundInp" style="width:20px; height:20px;">
-      <label for="roundInp">Rundtur (Auto-opprett retur)</label>
+      <label for="roundInp">Rundtur (Auto-retur)</label>
     </div>
 
     <button class="submit-btn" onclick="handleRegister()">➕ REGISTRER</button>
 
     <div class="counter-box">
-      <div class="section-label">Antall i dag</div>
+      <div class="section-label">Registrert i dag</div>
       <div class="counter-number" id="dayCount">0</div>
     </div>
   </div>
@@ -96,90 +148,110 @@
 <div class="toast" id="toast"></div>
 
 <script>
-let type = '';
-let status = '';
+let selType = '';
+let selStatus = '';
 let driver = localStorage.getItem('cs_name') || '';
 let webhook = localStorage.getItem('cs_wh') || '';
 
 window.onload = () => {
-  if(!driver) { document.getElementById('setup-view').style.display='flex'; }
-  else { 
+  if(!driver) {
+    document.getElementById('setup-view').style.display='flex';
+  } else {
     document.getElementById('main-view').style.display='flex';
-    document.getElementById('driverName').innerText = driver;
+    document.getElementById('badgeContainer').style.display='flex';
+    document.getElementById('driverDisplay').innerText = driver;
     updateCounter();
   }
   checkNewDay();
 };
 
 function saveSetup() {
-  const n = document.getElementById('nameInp').value;
-  const w = document.getElementById('whInp').value;
-  if(!n || !w) return alert("Fyll ut begge");
+  const n = document.getElementById('nameInp').value.trim();
+  const w = document.getElementById('whInp').value.trim();
+  if(!n || !w) return alert("Fyll ut navn og URL");
   localStorage.setItem('cs_name', n);
   localStorage.setItem('cs_wh', w);
   location.reload();
 }
 
-function setType(val) {
-  type = val;
-  document.getElementById('btnImport').className = 'tgl-btn' + (val==='Import'?' active-import':'');
-  document.getElementById('btnEksport').className = 'tgl-btn' + (val==='Eksport'?' active-eksport':'');
+function setType(v) {
+  selType = v;
+  document.getElementById('btnImport').className = 'tgl-btn' + (v==='Import'?' active-import':'');
+  document.getElementById('btnEksport').className = 'tgl-btn' + (v==='Eksport'?' active-eksport':'');
 }
 
-function setStatus(val) {
-  status = val;
-  document.getElementById('btnHavn').className = 'tgl-btn' + (val==='Havn'?' active-havn':'');
-  document.getElementById('btnKunde').className = 'tgl-btn' + (val==='Kunde'?' active-kunde':'');
+function setStatus(v) {
+  selStatus = v;
+  document.getElementById('btnHavn').className = 'tgl-btn' + (v==='Havn'?' active-havn':'');
+  document.getElementById('btnKunde').className = 'tgl-btn' + (v==='Kunde'?' active-kunde':'');
 }
 
-// LOGIKK FOR FRA/TIL TEKST
 function getDirection(t, s) {
-  if (t === 'Import') {
-    return s === 'Havn' ? 'Havn -> Kunde' : 'Kunde -> Havn';
-  } else { // Eksport
-    return s === 'Havn' ? 'Havn -> Kunde' : 'Kunde -> Havn';
-  }
-}
-
-// Samme logikk for rundtur (motsatt vei)
-function getOppositeDirection(t, s) {
-  const normal = getDirection(t, s);
-  return normal === 'Havn -> Kunde' ? 'Kunde -> Havn' : 'Havn -> Kunde';
+  return s === 'Havn' ? 'Havn -> Kunde' : 'Kunde -> Havn';
 }
 
 async function handleRegister() {
-  const cont = document.getElementById('contInp').value.toUpperCase().replace(/\s/g,'');
-  const cust = document.getElementById('custInp').value;
-  const isRound = document.getElementById('roundInp').checked;
+  const contInp = document.getElementById('contInp');
+  const custInp = document.getElementById('custInp');
+  const commInp = document.getElementById('commInp');
+  const roundInp = document.getElementById('roundInp');
+  
+  const cont = contInp.value.toUpperCase().replace(/\s/g,'');
+  const cust = custInp.value.trim();
+  const comm = commInp.value.trim();
+  const isRound = roundInp.checked;
   const regex = /^[A-Z]{4}\d{7}$/;
 
-  if(!regex.test(cont)) return showToast("❌ Ugyldig container (4 bokst + 7 tall)", "red");
-  if(!type || !status || !cust) return showToast("⚠️ Mangler valg", "");
+  if(!regex.test(cont)) return showToast("❌ Format: 4 bokstaver + 7 tall", "red");
+  if(!selType || !selStatus || !cust) return showToast("⚠️ Velg type, status og kunde", "");
 
-  const direction = getDirection(type, status);
-  const data1 = { date: new Date().toLocaleDateString('no-NO'), driver, cont, type, status: direction, cust };
+  const dir = getDirection(selType, selStatus);
+  const now = new Date();
   
-  showToast("⌛ Registrerer...", "");
-  await send(data1);
+  const payload = {
+    date: now.toLocaleDateString('no-NO'),
+    time: now.toLocaleTimeString('no-NO', {hour:'2-digit', minute:'2-digit'}),
+    driver: driver,
+    cont: cont,
+    type: selType,
+    status: dir,
+    cust: cust,
+    comm: comm
+  };
+
+  showToast("📡 Sender...", "");
+  await send(payload);
   let count = 1;
 
   if(isRound) {
-    const data2 = { ...data1, status: getOppositeDirection(type, status), comment: "Rundtur retur" };
-    await send(data2);
+    const reverseDir = dir === 'Havn -> Kunde' ? 'Kunde -> Havn' : 'Havn -> Kunde';
+    const payload2 = { ...payload, status: reverseDir, comm: comm + " (Rundtur retur)" };
+    await send(payload2);
     count = 2;
   }
 
   addCounter(count);
-  showToast("✅ Lagret i rad 4+", "green");
+  showToast("✅ Registrert!", "var(--green-light)");
   
-  // Reset
-  document.getElementById('contInp').value = '';
-  document.getElementById('roundInp').checked = false;
+  // --- RESET AV SKJEMA ---
+  contInp.value = '';
+  custInp.value = '';
+  commInp.value = '';
+  roundInp.checked = false;
+  
+  // Nullstill knappe-valg (fjerner farger)
+  selType = '';
+  selStatus = '';
+  document.getElementById('btnImport').className = 'tgl-btn';
+  document.getElementById('btnEksport').className = 'tgl-btn';
+  document.getElementById('btnHavn').className = 'tgl-btn';
+  document.getElementById('btnKunde').className = 'tgl-btn';
 }
 
 async function send(obj) {
-  if(!webhook) return;
-  await fetch(webhook, { method: 'POST', mode: 'no-cors', body: JSON.stringify(obj) });
+  try {
+    await fetch(webhook, { method: 'POST', mode: 'no-cors', body: JSON.stringify(obj) });
+  } catch(e) { console.error(e); }
 }
 
 function addCounter(n) {
@@ -203,7 +275,7 @@ function checkNewDay() {
 
 function showToast(m, c) {
   const t = document.getElementById('toast');
-  t.innerText = m; t.style.color = c; t.classList.add('show');
+  t.innerText = m; t.style.color = c || 'white'; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 </script>
