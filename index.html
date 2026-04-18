@@ -580,15 +580,26 @@ document.getElementById('saveDriverBtn').addEventListener('click', () => {
 });
 
 // CLOCK
+let lastDayKey = todayKey();
 function updateClock() {
   const d = new Date();
   const dateStr = d.toLocaleDateString('no-NO', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
-  const timeStr = d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const timeStr = d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
   document.getElementById('dateDisplay').textContent = dateStr;
   document.getElementById('timeDisplay').textContent = timeStr;
+
+  // Sjekk om dagen har rullet over mens appen er åpen
+  const currentKey = todayKey();
+  if (currentKey !== lastDayKey) {
+    lastDayKey = currentKey;
+    // Reset dagens teller og siste-liste
+    state.seqCount = parseInt(localStorage.getItem('cs_seq_'+currentKey) || '0');
+    document.getElementById('seqDisplay').textContent = String(state.seqCount + 1).padStart(3, '0');
+    renderRecent();
+  }
 }
 updateClock();
-setInterval(updateClock, 1000);
+setInterval(updateClock, 10000); // oppdateres hvert 10. sek — nok for minutt-visning
 document.getElementById('seqDisplay').textContent = String(state.seqCount + 1).padStart(3, '0');
 
 // CONTAINER VALIDATION
@@ -660,14 +671,17 @@ function showToast(msg, type = '') {
   setTimeout(() => t.classList.remove('show'), 3200);
 }
 
-// RECENT
+// RECENT — viser kun dagens registreringer
 function renderRecent() {
   const el = document.getElementById('recentLog');
-  if (state.recent.length === 0) {
-    el.innerHTML = '<div class="empty-state">Ingen loggføringer enda</div>';
+  const today = todayKey();
+  const todays = state.recent.filter(r => r.dato === today);
+
+  if (todays.length === 0) {
+    el.innerHTML = '<div class="empty-state">Ingen loggføringer i dag</div>';
     return;
   }
-  el.innerHTML = state.recent.slice(0, 5).map(r => `
+  el.innerHTML = todays.slice(0, 5).map(r => `
     <div class="log-entry ${r.destinasjon}">
       <div class="log-time">${r.klokkeslett}</div>
       <div>
@@ -685,7 +699,7 @@ submitBtn.addEventListener('click', async () => {
   if (submitBtn.disabled) return;
   const now = new Date();
   const payload = {
-    dato: now.toISOString().split('T')[0],
+    dato: todayKey(), // lokal dato YYYY-MM-DD, ikke UTC
     klokkeslett: now.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' }),
     sjafor: state.sjafor,
     bilnummer: state.bil,
