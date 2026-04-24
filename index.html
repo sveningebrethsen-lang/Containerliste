@@ -78,22 +78,18 @@
   .masthead::before {
     content: "";
     position: absolute;
-    top: -40%;
-    right: -25%;
-    width: 70%;
-    aspect-ratio: 1;
-    background: var(--coral);
-    border-radius: 50%;
+    inset: 0;
+    /* SVG med fylt path som danner høyre siden (korall) med en slak S-kurve som skillelinje */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'><path d='M 220 0 C 160 55, 260 145, 180 200 L 400 200 L 400 0 Z' fill='%23FF5A3C'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
     pointer-events: none;
-    animation: floatSun 14s ease-in-out infinite alternate, sunRise 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: curveDraw 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-  @keyframes floatSun {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(-8px, 12px); }
-  }
-  @keyframes sunRise {
-    from { transform: translate(0, 100px) scale(0.6); opacity: 0; }
-    to { transform: translate(0, 0) scale(1); opacity: 1; }
+  @keyframes curveDraw {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
   }
   .masthead::after {
     content: "";
@@ -142,19 +138,21 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(245, 241, 232, 0.2);
+    background: rgba(0, 42, 58, 0.5);
+    border: 1px solid rgba(245, 241, 232, 0.3);
     font-family: var(--mono);
     font-size: 0.6875rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--cream);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-radius: 999px;
     transition: background 150ms ease;
+    position: relative;
+    z-index: 2;
   }
-  .driver-chip:active { background: rgba(255, 255, 255, 0.16); }
+  .driver-chip:active { background: rgba(0, 42, 58, 0.7); }
   .driver-chip-dot {
     width: 7px; height: 7px;
     background: var(--mint);
