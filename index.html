@@ -1023,10 +1023,26 @@ function renderRecent() {
 }
 renderRecent();
 
+// Generer unik ID — sjåfør+bil+tid+random gir minimal kollisjonssjanse
+function generateRegId() {
+  const driverPart = (state.sjafor || 'X').slice(0, 3).toUpperCase();
+  const ts = Date.now().toString(36).toUpperCase();
+  const rand = Math.random().toString(36).slice(2, 7).toUpperCase();
+  return `${driverPart}-${ts}-${rand}`;
+}
+
+let submitLockedUntil = 0;
+
 submitBtn.addEventListener('click', async () => {
   if (submitBtn.disabled) return;
+  // Throttle: hindre dobbel-trykk innen 3 sekunder
+  const now_ms = Date.now();
+  if (now_ms < submitLockedUntil) return;
+  submitLockedUntil = now_ms + 3000;
+
   const now = new Date();
   const payload = {
+    regId: generateRegId(),
     dato: todayKey(),
     klokkeslett: now.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' }),
     sjafor: state.sjafor,
@@ -1038,6 +1054,8 @@ submitBtn.addEventListener('click', async () => {
     timestamp: now.toISOString(),
   };
 
+  // Disable umiddelbart for å hindre dobbel-trykk før neste render
+  submitBtn.disabled = true;
   submitBtn.classList.add('loading');
   document.getElementById('submitText').textContent = 'Sender';
 
